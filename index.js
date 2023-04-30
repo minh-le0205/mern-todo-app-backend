@@ -5,6 +5,8 @@ import 'dotenv/config';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import allRoutes from './routes/index.js';
+import mongoSanitize from 'express-mongo-sanitize';
+import xss from 'xss-clean';
 
 const PORT = process.env.PORT || 8000;
 
@@ -15,15 +17,19 @@ app.use(cors());
 app.use(morgan('tiny'));
 app.use(express.json());
 app.use(cookieParser());
+// Data sanitization against NoSQL query injection
+app.use(mongoSanitize());
+// Data sanitization against Xss
+app.use(xss());
 
 //Routes
 app.use('/api/v1', allRoutes);
 
 // Error Handler
 app.use((err, req, res, next) => {
-  const status = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
-  return res.status(status).json({ message, stack: err.stack });
+	const status = err.statusCode || 500;
+	const message = err.message || 'Internal Server Error';
+	return res.status(status).json({ message, stack: err.stack });
 });
 
 const connectDB = async () => {
